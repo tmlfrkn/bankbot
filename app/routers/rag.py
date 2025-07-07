@@ -116,8 +116,10 @@ async def answer_query(req: QueryRequest, request: Request, db: AsyncSession = D
 
     # Determine access visibility for chunks
     vis_list = [rag.ACCESS_MATRIX.get(c["document_type"], {}).get(access_level, rag.AccessType.NONE) for c in chunks]
+    print("[DEBUG] Visibility list:", vis_list)
 
     only_limited = chunks and all(v in (rag.AccessType.SUMMARY, rag.AccessType.RELEVANT) for v in vis_list)
+    print("[DEBUG] Only limited access chunks:", only_limited)
     if only_limited:
         # Build simple answer: each allowed chunk content with citation (no LLM)
         direct_answer = rag.build_context(chunks, access_level)
