@@ -53,7 +53,11 @@ async def retrieve_top_chunks(req: QueryRequest, request: Request, db: AsyncSess
         citation = f"{ch['entity']} – {ch['main_section_title']}"
         if ch.get("sub_section_title"):
             citation += f", {ch['sub_section_title']}"
-        content = rag.choose_content(ch, access_level) or ""
+        content = rag.choose_content(ch, access_level)
+        # Skip chunks that are not visible per access matrix or have no resolvable content
+        if content is None:
+            continue
+
         resp_chunks.append(
             ChunkResponse(
                 chunk_id=str(ch["chunk_id"]),

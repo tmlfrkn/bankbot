@@ -52,6 +52,7 @@ async def vector_search(db: AsyncSession, embed: np.ndarray, allowed_types: List
             DocumentChunk.sub_section_title,
             DocumentChunk.text_content,
             DocumentChunk.summary,
+            DocumentChunk.generated_labels,
             distance_expr,
         )
         .where(DocumentChunk.document_type.in_(allowed_types))
@@ -74,19 +75,42 @@ async def vector_search(db: AsyncSession, embed: np.ndarray, allowed_types: List
         "sub_section_title",
         "text_content",
         "summary",
+        "generated_labels",
         "distance",
     ]
     return [dict(zip(cols, row)) for row in rows]
 
 
 def choose_content(chunk: Dict[str, Any], level: int) -> str | None:
+    """Return appropriate content string for the user level based on ACCESS_MATRIX.
+
+    Priority:
+    1. FULL      -> raw full text (text_content)
+    2. SUMMARY   -> summary field
+    3. RELEVANT  -> relevant snippet (if missing, fallback to summary)
+    4. NONE      -> None (filtered out later)
+    """
     vis = ACCESS_MATRIX.get(chunk["document_type"], {}).get(level, AccessType.NONE)
     if vis == AccessType.NONE:
         return None
-    if vis == AccessType.SUMMARY and chunk.get("summary"):
-        return chunk["summary"]
-    if vis == AccessType.RELEVANT and chunk.get("summary"):
-        return chunk["summary"]
+
+    if vis == AccessType.SUMMARY:
+        return chunk.get("summary")
+
+    if vis == AccessType.RELEVANT:
+        # Use generated_labels first; else summary; else first 400 chars
+        labels = chunk.get("generated_labels")
+        if labels:
+            # Ensure string format (comma-separated)
+            return ", ".join(labels)
+
+        # Fallbacks
+        if chunk.get("summary"):
+            return chunk["summary"]
+        raw = chunk.get("text_content") or ""
+        return raw[:400] + ("…" if len(raw) > 400 else "")
+
+    # AccessType.FULL – return full raw text
     return chunk.get("text_content")
 
 

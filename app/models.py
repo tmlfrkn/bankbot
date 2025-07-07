@@ -319,6 +319,7 @@ class DocumentChunk(Base):
     sub_section_title = Column(Text)
     text_content = Column(Text, nullable=False)
     summary = Column(Text)
+    generated_labels = Column(ARRAY(String))  # new column: list of labels (keyword tags)
     # pgvector embedding (1024-d)
     embedding = Column(Vector(1024))
 
