@@ -1,0 +1,83 @@
+# -----------------------------------------------------------------------------
+# Global ignores for BankBot repository
+# -----------------------------------------------------------------------------
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+venv.bak/
+
+# Virtual environments
+.venv/
+# Explicitly ignore main virtual environment folder
+venv/
+
+# Model weights / checkpoints (large files)
+models/
+models/*
+
+# Logs & runtime artifacts
+*.log
+*.pid
+*.csv
+*.sqlite3
+*.db
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+
+# IDEs / Editors
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Jupyter/IPython
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# dotenv / local settings
+.env
+.env.*
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Migrations / Alembic generated versions
+alembic/versions/
+
+# Documentation build artifacts
+site/
+
+# Other
+*.bak
+*.tmp
+
+# -----------------------------------------------------------------------------
+# End of .gitignore
+# ----------------------------------------------------------------------------- 
