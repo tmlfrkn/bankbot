@@ -167,7 +167,7 @@ uvicorn app.main:app --reload
 
 ## 9  License & Credits
 
-Released under the **MIT License**.  
+
 Powered by **FastAPI**, **SQLAlchemy**, **pgvector**, **Sentence-Transformers**, and **Yi-1.5-9B-Chat**.
 
 > Built as part of a technical proficiency test & research prototype – **not** production-ready.

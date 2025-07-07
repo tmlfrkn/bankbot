@@ -1,5 +1,6 @@
 from typing import List, Optional
 from uuid import UUID
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -25,7 +26,7 @@ class HistoryEntrySchema(BaseModel):
     query_text: str
     response_text: Optional[str] = None
     ip_address: Optional[str] = None
-    created_at: str  # ISO format
+    created_at: datetime  # will auto-serialize
 
     class Config:
         orm_mode = True

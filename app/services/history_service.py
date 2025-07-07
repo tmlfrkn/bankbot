@@ -1,7 +1,7 @@
 from typing import List, Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import QueryHistory
@@ -40,8 +40,17 @@ async def log_history(
 
 
 async def list_sessions(db: AsyncSession, *, user_id: UUID) -> List[UUID]:
-    """Return distinct session ids for the given user ordered by recency."""
-    stmt = select(QueryHistory.session_id).where(QueryHistory.user_id == user_id).distinct().order_by(QueryHistory.created_at.desc())
+    """Return distinct session ids for the given user ordered by last activity (newest first)."""
+    subq = (
+        select(
+            QueryHistory.session_id.label("sid"),
+            func.max(QueryHistory.created_at).label("last_created_at"),
+        )
+        .where(QueryHistory.user_id == user_id)
+        .group_by(QueryHistory.session_id)
+        .subquery()
+    )
+    stmt = select(subq.c.sid).order_by(subq.c.last_created_at.desc())
     result = await db.execute(stmt)
     return [row[0] for row in result.fetchall()]
 

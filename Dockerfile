@@ -42,4 +42,16 @@ USER ${APP_USER}
 EXPOSE 8000
 
 # uvicorn with optimum production settings; can be overridden at runtime
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# --- Yi-1.5-9B-Chat model (optional) ----------------------------------------
+# Set MODEL_URL as build-arg to auto-download gguf; otherwise mount via volume
+ARG YI_MODEL_URL="https://huggingface.co/mradermacher/Yi-1.5-9B-GGUF/resolve/main/Yi-1.5-9B.Q4_K_S.gguf"
+ENV MODEL_DIR=/models/yi-1.5-9b-chat
+ENV YI_MODEL_PATH=${MODEL_DIR}/Yi-1.5-9B.Q4_K_S.gguf
+
+RUN if [ ! -z "$YI_MODEL_URL" ]; then \
+      mkdir -p ${MODEL_DIR} && \
+      echo "Downloading Yi model…" && \
+      wget -qO ${YI_MODEL_PATH} "$YI_MODEL_URL" ; \
+    fi
