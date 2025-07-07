@@ -6,10 +6,10 @@ from typing import List, Dict, Any
 import numpy as np
 from sentence_transformers import SentenceTransformer  # type: ignore
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from sqlalchemy import select
 from asyncio import to_thread
 
-from app.models import ACCESS_MATRIX, AccessType  # use central definitions
+from app.models import ACCESS_MATRIX, AccessType, DocumentChunk  # add DocumentChunk
 
 TOP_K_DEFAULT = 3
 
@@ -36,29 +36,45 @@ def allowed_doc_types(level: int) -> List[str]:
 
 
 async def vector_search(db: AsyncSession, embed: np.ndarray, allowed_types: List[str], top_k: int = TOP_K_DEFAULT) -> List[Dict[str, Any]]:
-    """Return list of chunk dicts ordered by distance."""
-    vec_literal = '[' + ','.join(f'{x:.6f}' for x in embed.tolist()) + ']'
+    """Return list of chunk dicts ordered by distance using ORM expressions."""
+    embed_list = embed.tolist()
 
-    sql = text(
-        """
-        SELECT chunk_id, source_document, entity, language, document_type,
-               main_section_title, sub_section_title, text_content, summary,
-               embedding <-> (:vec)::vector AS distance
-        FROM document_chunks
-        WHERE document_type = ANY(:types)
-        ORDER BY embedding <-> (:vec)::vector
-        LIMIT :k;
-        """
+    distance_expr = DocumentChunk.embedding.l2_distance(embed_list).label("distance")
+
+    stmt = (
+        select(
+            DocumentChunk.chunk_id,
+            DocumentChunk.source_document,
+            DocumentChunk.entity,
+            DocumentChunk.language,
+            DocumentChunk.document_type,
+            DocumentChunk.main_section_title,
+            DocumentChunk.sub_section_title,
+            DocumentChunk.text_content,
+            DocumentChunk.summary,
+            distance_expr,
+        )
+        .where(DocumentChunk.document_type.in_(allowed_types))
+        .order_by(distance_expr)
+        .limit(top_k)
     )
-    params = {"vec": vec_literal, "types": allowed_types, "k": top_k}
 
     print("[DEBUG] vector_search allowed_types:", allowed_types)
-    result = await db.execute(sql, params)
+    result = await db.execute(stmt)
     rows = result.fetchall()
     print(f"[DEBUG] vector_search fetched rows: {len(rows)}")
+
     cols = [
-        "chunk_id","source_document","entity","language","document_type",
-        "main_section_title","sub_section_title","text_content","summary","distance"
+        "chunk_id",
+        "source_document",
+        "entity",
+        "language",
+        "document_type",
+        "main_section_title",
+        "sub_section_title",
+        "text_content",
+        "summary",
+        "distance",
     ]
     return [dict(zip(cols, row)) for row in rows]
 

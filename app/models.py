@@ -306,4 +306,22 @@ class QueryHistory(Base):
     # Relationships
     user = relationship("User")
 
-# --------------------------------------- 
+class DocumentChunk(Base):
+    """Vector store chunk model (PGVector)."""
+    __tablename__ = "document_chunks"
+
+    chunk_id = Column(UUID(as_uuid=True), primary_key=True)
+    source_document = Column(String(255), nullable=False)
+    entity = Column(String(100))
+    language = Column(String(5))
+    document_type = Column(String(100), nullable=False)
+    main_section_title = Column(Text)
+    sub_section_title = Column(Text)
+    text_content = Column(Text, nullable=False)
+    summary = Column(Text)
+    # pgvector embedding (1024-d)
+    embedding = Column(Vector(1024))
+
+    # No relationships – read-only utility model
+
+# ------------------------------------------------------ 
